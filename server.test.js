@@ -10,7 +10,7 @@ function tmpDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'resume-tailor-test-'));
 }
 
-function makeApp({ tailorFn, baseUrl, extractFn, pdfParseImpl } = {}) {
+function makeApp({ tailorFn, baseUrl, extractFn, pdfParseImpl, pdfRenderFn } = {}) {
   const cvsDir = tmpDir();
   const skillPath = path.join(tmpDir(), 'SKILL.md');
   fs.writeFileSync(skillPath, 'TEST SKILL RULES');
@@ -25,6 +25,7 @@ function makeApp({ tailorFn, baseUrl, extractFn, pdfParseImpl } = {}) {
     baseUrl,
     tailorFn,
     extractFn,
+    pdfRenderFn,
     pdfParseImpl,
   });
   return { app, cvsDir };
@@ -251,6 +252,61 @@ test('POST /api/export-docx returns 400 when resume is missing', async () => {
       body: JSON.stringify({}),
     });
     assert.equal(res.status, 400);
+  } finally {
+    server.close();
+  }
+});
+
+test('POST /api/export-pdf returns a pdf buffer for the given markdown', async () => {
+  const fakePdfRenderFn = async (markdown) => {
+    assert.ok(markdown.includes('Ada Lovelace'));
+    return Buffer.from('%PDF-fake');
+  };
+  const { app } = makeApp({ pdfRenderFn: fakePdfRenderFn });
+  const { server, base } = await listen(app);
+  try {
+    const res = await fetch(`${base}/api/export-pdf`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resume: '# Ada Lovelace\n\nMathematician' }),
+    });
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get('content-type'), 'application/pdf');
+    const buf = Buffer.from(await res.arrayBuffer());
+    assert.equal(buf.toString(), '%PDF-fake');
+  } finally {
+    server.close();
+  }
+});
+
+test('POST /api/export-pdf returns 400 when resume is missing', async () => {
+  const { app } = makeApp();
+  const { server, base } = await listen(app);
+  try {
+    const res = await fetch(`${base}/api/export-pdf`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    assert.equal(res.status, 400);
+  } finally {
+    server.close();
+  }
+});
+
+test('POST /api/export-pdf returns 502 when rendering fails', async () => {
+  const failingPdfRenderFn = async () => { throw new Error('Puppeteer launch failed'); };
+  const { app } = makeApp({ pdfRenderFn: failingPdfRenderFn });
+  const { server, base } = await listen(app);
+  try {
+    const res = await fetch(`${base}/api/export-pdf`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resume: '# Ada Lovelace' }),
+    });
+    assert.equal(res.status, 502);
+    const body = await res.json();
+    assert.match(body.error, /Puppeteer launch failed/);
   } finally {
     server.close();
   }

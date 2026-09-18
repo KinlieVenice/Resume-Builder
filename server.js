@@ -8,6 +8,7 @@ const { buildTailorMessages, parseTailorResponse } = require('./lib/promptBuilde
 const { tailorWithOpenRouter } = require('./lib/openrouterClient');
 const { extractTextFromPdf, buildExtractMessages, parseExtractResponse } = require('./lib/extractCv');
 const { renderDocxBuffer } = require('./lib/exportDocx');
+const { renderPdfBuffer } = require('./lib/exportPdf');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
@@ -21,6 +22,7 @@ function createApp({
   tailorFn = tailorWithOpenRouter,
   extractFn = tailorWithOpenRouter,
   pdfParseImpl,
+  pdfRenderFn = renderPdfBuffer,
 }) {
   const app = express();
   app.use(express.json());
@@ -121,6 +123,24 @@ function createApp({
       res.set({
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': 'attachment; filename="resume.docx"',
+      });
+      res.send(buffer);
+    } catch (err) {
+      res.status(502).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/export-pdf', async (req, res) => {
+    const { resume } = req.body || {};
+    if (!resume) {
+      return res.status(400).json({ error: 'resume is required' });
+    }
+
+    try {
+      const buffer = await pdfRenderFn(resume);
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment; filename="resume.pdf"',
       });
       res.send(buffer);
     } catch (err) {
