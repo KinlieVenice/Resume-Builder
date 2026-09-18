@@ -5,7 +5,9 @@ Tailors a master CV (yours or a friend's) to a pasted job description using Clau
 ## Setup
 
 1. `npm install`
-2. `cp .env.example .env` and fill in `OPENROUTER_API_KEY` (from https://openrouter.ai/keys)
+2. `cp .env.example .env` and fill in `OPENROUTER_API_KEY` — either:
+   - an OpenRouter key from https://openrouter.ai/keys, or
+   - a key from a local gateway like [9router](https://github.com/decolua/9router), which connects to Claude, GPT, OpenCode, etc. Set `OPENROUTER_BASE_URL` in `.env` to that gateway's local URL (e.g. `http://localhost:20128/v1`) and `OPENROUTER_MODEL` to whatever model slug it exposes.
 3. `npm start`
 4. Open http://localhost:3000
 
