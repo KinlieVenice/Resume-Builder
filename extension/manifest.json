@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Resume Builder",
+  "version": "1.0.0",
+  "description": "Highlight a job description, right-click, pick a saved person, and get a tailored resume.pdf + resume.docx auto-downloaded.",
+  "icons": {
+    "128": "icon128.png"
+  },
+  "permissions": ["contextMenus", "downloads", "notifications", "storage"],
+  "host_permissions": ["http://localhost/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "options.html"
+}

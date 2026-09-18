@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Resume Builder Settings</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 1rem; width: 320px; }
+    label { display: block; margin-bottom: 0.3rem; font-weight: bold; }
+    input { width: 100%; box-sizing: border-box; padding: 0.4rem; }
+    button { margin-top: 0.6rem; padding: 0.4rem 0.8rem; }
+    p.status { color: #2563eb; min-height: 1.2em; }
+  </style>
+</head>
+<body>
+  <label for="server-url">Resume Tailor server URL</label>
+  <input type="text" id="server-url" placeholder="http://localhost:3000" />
+  <button id="save-btn">Save</button>
+  <p id="status" class="status"></p>
+  <script src="options.js"></script>
+</body>
+</html>
