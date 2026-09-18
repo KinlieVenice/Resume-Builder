@@ -1,5 +1,7 @@
 'use strict';
 
+marked.setOptions({ breaks: true });
+
 const state = {
   people: [],
   selectedPersonId: null,

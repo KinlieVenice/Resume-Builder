@@ -115,10 +115,77 @@ button.danger {
 }
 
 @media print {
+  @page {
+    size: letter;
+    margin: 0.45in 0.6in;
+  }
+
   header, #people-panel, .tailor-controls, .resume-column textarea, #print-btn, .match-column {
     display: none !important;
   }
+
+  body {
+    padding: 0;
+  }
+
   #print-view {
     display: block !important;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.28;
+    color: #000;
+  }
+
+  #print-view h1 {
+    font-size: 14pt;
+    text-align: center;
+    margin: 0 0 2pt;
+  }
+
+  /* Tagline + contact + links, all one <p> with <br> line breaks under the name */
+  #print-view h1 + p {
+    text-align: center;
+    margin: 1pt 0 4pt;
+    font-size: 9pt;
+    line-height: 1.4;
+  }
+
+  #print-view h2 {
+    font-size: 10pt;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    border-bottom: 1pt solid #000;
+    margin: 8pt 0 3pt;
+    padding-bottom: 1pt;
+  }
+
+  #print-view h2:first-of-type {
+    margin-top: 4pt;
+  }
+
+  #print-view p {
+    margin: 2pt 0;
+  }
+
+  #print-view ul {
+    margin: 1pt 0 4pt;
+    padding-left: 14pt;
+  }
+
+  #print-view li {
+    margin: 0 0 1.5pt;
+  }
+
+  #print-view strong {
+    font-weight: bold;
+  }
+
+  #print-view em {
+    font-style: italic;
+  }
+
+  #print-view a {
+    color: #000;
+    text-decoration: none;
   }
 }

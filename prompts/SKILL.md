@@ -61,15 +61,46 @@ Return exactly two sections, in this order, each starting with the literal headi
 <the checklist>
 ```
 
-**RESUME** — Markdown:
-- `# Name` + contact line
-- `## Summary` — 2-3 sentences, tailored to this JD, built only from master CV facts
-- `## Skills` — grouped, most JD-relevant first
-- `## Experience` — reverse chronological, each role with tailored bullets
-- `## Projects` — most JD-relevant first
-- `## Education`
+**RESUME** — Markdown, exactly this structure (omit a section entirely if the master CV has nothing for it):
 
-Keep bullets concise (one line each where possible), action-verb first, quantified where the master CV supports it.
+```
+# {Full Name}
+{Title/tagline tailored to this JD, e.g. "Software Engineer — Backend & Systems"}
+{Location} • {Open to Remote, only if the master CV says so} • {email} • {phone}
+{portfolio/GitHub/LinkedIn links, only ones present in the master CV, separated by " • "}
+
+## SUMMARY
+{2-3 sentences, tailored to this JD, built only from master CV facts}
+
+## TECHNICAL SKILLS
+**{Group}:** {comma-separated list}
+**{Group}:** {comma-separated list}
+
+## PROFESSIONAL EXPERIENCE
+**{Company} — {Location}** ({Start} – {End})
+*{Title} · {one short line of context: scale/team/product} — {key stack}*
+- {bullet}
+- {bullet}
+
+## SELECTED PROJECTS
+- **{Project}** ({stack}). {one-line description with impact, ideally a number}.
+
+## EDUCATION
+**{School} — {Location}** ({Graduation date})
+*{Degree} · {GPA if given} · {honors if given}*
+- {bullet, only for standout facts: thesis, awards — omit if nothing notable}
+
+## CERTIFICATIONS
+{Issuer}: {cert} · {cert}
+```
+
+Add a `## LEADERSHIP` or `## AWARDS` section in the same style only if the master CV has hackathon/leadership/award content relevant to this JD — omit otherwise.
+
+**Conciseness and length budget — this resume prints to a max 2-page PDF:**
+- Every bullet is one line, two at the absolute most. Target ≤ 20 words per bullet. Cut qualifiers and throat-clearing ("responsible for", "worked on") — start with the action and the result.
+- Most recent / most JD-relevant role: up to 4-5 bullets. Older or less relevant roles: 2-3 bullets. Internships/short stints: 1-2.
+- Selected Projects: 3-5 entries, one line each.
+- If the master CV has more true content than comfortably fits 2 pages at this density, cut whole low-relevance bullets, projects, or older roles first — never shrink a true fact into a misleading one to save space, and never fabricate a shorter version that drops the substance silently.
 
 **MATCH_REPORT** — one line per distinct requirement/skill you can identify in the job description, as a flat list:
 - `- ✅ <requirement> — <short reason, citing what's in the master CV>` if the master CV supports it
