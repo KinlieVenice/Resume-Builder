@@ -139,12 +139,14 @@ el('save-cv-btn').addEventListener('click', async () => {
 });
 
 el('delete-cv-btn').addEventListener('click', async () => {
-  if (!state.selectedPersonId) return;
-  await fetch(`/api/cv/${state.selectedPersonId}`, { method: 'DELETE' });
-  state.selectedPersonId = null;
+  if (state.selectedPersonId) {
+    await fetch(`/api/cv/${state.selectedPersonId}`, { method: 'DELETE' });
+    state.selectedPersonId = null;
+    await loadPeople();
+  }
   el('cv-json').value = '';
   el('cv-editor-title').textContent = 'New person';
-  await loadPeople();
+  el('cv-error').textContent = '';
 });
 
 el('tailor-btn').addEventListener('click', async () => {
