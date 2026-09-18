@@ -189,4 +189,35 @@ el('print-btn').addEventListener('click', () => {
   window.print();
 });
 
+el('export-docx-btn').addEventListener('click', async () => {
+  const resume = el('resume-markdown').value;
+  el('export-error').textContent = '';
+  el('export-docx-btn').disabled = true;
+  el('export-docx-btn').textContent = 'Exporting…';
+
+  try {
+    const res = await fetch('/api/export-docx', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resume }),
+    });
+    if (!res.ok) {
+      const body = await res.json();
+      throw new Error(body.error || 'Export failed');
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'resume.docx';
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    el('export-error').textContent = err.message;
+  } finally {
+    el('export-docx-btn').disabled = false;
+    el('export-docx-btn').textContent = 'Export Word';
+  }
+});
+
 loadPeople();
