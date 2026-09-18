@@ -120,7 +120,7 @@ button.danger {
     margin: 0.45in 0.6in;
   }
 
-  header, #people-panel, .tailor-controls, .resume-column textarea, #print-btn, .match-column {
+  header, #people-panel, .tailor-controls, .resume-column, .match-column {
     display: none !important;
   }
 
