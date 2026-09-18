@@ -10,7 +10,7 @@ function tmpDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'resume-tailor-test-'));
 }
 
-function makeApp({ tailorFn } = {}) {
+function makeApp({ tailorFn, baseUrl } = {}) {
   const cvsDir = tmpDir();
   const skillPath = path.join(tmpDir(), 'SKILL.md');
   fs.writeFileSync(skillPath, 'TEST SKILL RULES');
@@ -19,6 +19,7 @@ function makeApp({ tailorFn } = {}) {
     skillPath,
     apiKey: 'test-key',
     model: 'anthropic/claude-sonnet-5',
+    baseUrl,
     tailorFn,
   });
   return { app, cvsDir };
@@ -87,8 +88,9 @@ test('GET/PUT/DELETE /api/cv/:id round-trip a CV', async () => {
 });
 
 test('POST /api/tailor returns resume, matchReport, matchPercent from injected tailorFn', async () => {
-  const fakeTailor = async ({ messages }) => {
+  const fakeTailor = async ({ messages, baseUrl }) => {
     assert.equal(messages[0].content, 'TEST SKILL RULES');
+    assert.equal(baseUrl, 'http://localhost:20128/v1');
     return [
       '## RESUME',
       '# Ada Lovelace',
@@ -98,7 +100,7 @@ test('POST /api/tailor returns resume, matchReport, matchPercent from injected t
       '- ❌ Rust — not found in master CV',
     ].join('\n');
   };
-  const { app } = makeApp({ tailorFn: fakeTailor });
+  const { app } = makeApp({ tailorFn: fakeTailor, baseUrl: 'http://localhost:20128/v1' });
   const { server, base } = await listen(app);
   try {
     await fetch(`${base}/api/people`, {

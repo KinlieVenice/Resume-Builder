@@ -6,7 +6,14 @@ const { slugify, listPeople, readCV, writeCV, deleteCV } = require('./lib/cvStor
 const { buildTailorMessages, parseTailorResponse } = require('./lib/promptBuilder');
 const { tailorWithOpenRouter } = require('./lib/openrouterClient');
 
-function createApp({ cvsDir, skillPath, apiKey, model, tailorFn = tailorWithOpenRouter }) {
+function createApp({
+  cvsDir,
+  skillPath,
+  apiKey,
+  model,
+  baseUrl,
+  tailorFn = tailorWithOpenRouter,
+}) {
   const app = express();
   app.use(express.json());
   app.use(express.static(path.join(__dirname, 'public')));
@@ -70,7 +77,7 @@ function createApp({ cvsDir, skillPath, apiKey, model, tailorFn = tailorWithOpen
     const messages = buildTailorMessages({ skillText, cv, jobDescription });
 
     try {
-      const raw = await tailorFn({ apiKey, model, messages });
+      const raw = await tailorFn({ apiKey, model, messages, baseUrl });
       const parsed = parseTailorResponse(raw);
       res.json(parsed);
     } catch (err) {
@@ -95,6 +102,7 @@ if (require.main === module) {
     skillPath: path.join(__dirname, 'prompts', 'SKILL.md'),
     apiKey,
     model: process.env.OPENROUTER_MODEL || 'anthropic/claude-sonnet-5',
+    baseUrl: process.env.OPENROUTER_BASE_URL,
   });
   const port = process.env.PORT || 3000;
   app.listen(port, () => console.log(`Resume Tailor running at http://localhost:${port}`));
