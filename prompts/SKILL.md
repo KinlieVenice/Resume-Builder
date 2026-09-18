@@ -51,6 +51,14 @@ Group skills under headings relevant to the JD's role type, using only groups th
 - Mirror the JD's terminology where the master CV supports it (e.g. if master CV says "container orchestration" and JD says "Kubernetes," and the master CV specifically names Kubernetes, use "Kubernetes"; don't relabel something the master CV doesn't actually name).
 - Omit items irrelevant to this JD; master CV content not used here isn't lost, it's just not included in this tailored version.
 
+## Tagline
+
+The line under the name (e.g. "Software Engineer — Backend & Systems") is positioning copy, not a claimed job title on a specific role — rewrite it every time to speak to this JD, don't just copy the master CV's stored tagline verbatim.
+
+- Reframe it toward the JD's role/domain using the closest real language the master CV supports. If the master CV shows genuinely transferable signal for the JD's domain (e.g. led teams, owned features end-to-end, coordinated delivery, managed stakeholders/timelines), it's fair to lean the tagline that direction (e.g. "Software Engineer — Technical Project Delivery" for a PM-flavored JD from an engineer with that track record).
+- Never adopt the JD's job title outright (e.g. don't write "IT Project Manager") unless the master CV shows the person has actually held that title or done that job — reframing real experience toward a domain is fine; claiming a professional identity with no basis in the master CV is fabrication.
+- If the master CV has no transferable signal at all for the JD's domain, keep the tagline honest to what the person actually is — don't force a domain fit that isn't there.
+
 ## Output format
 
 Return exactly two sections, in this order, each starting with the literal heading shown:
@@ -67,7 +75,7 @@ Return exactly two sections, in this order, each starting with the literal headi
 
 ```
 # {Full Name}
-{Title/tagline tailored to this JD, e.g. "Software Engineer — Backend & Systems"}
+{Title/tagline — see "Tagline" rule below}
 {Location} • {Open to Remote, only if the master CV says so} • {email} • {phone}
 {portfolio/GitHub/LinkedIn links, only ones present in the master CV, separated by " • "}
 
