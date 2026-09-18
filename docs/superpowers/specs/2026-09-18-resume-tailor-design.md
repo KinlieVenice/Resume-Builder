@@ -110,3 +110,35 @@ Lets a person download the tailored resume as a real `.docx` file, alongside the
 **Frontend:** new "Export Word" button next to "Preview & Print PDF" in the Tailor tab's resume column. On click: POST the current `#resume-markdown` textarea value (so edits made before export are included) to `/api/export-docx`, receive the binary response as a `Blob`, trigger a download via a temporary `<a download>` link.
 
 No change to the tailoring flow, PDF/print path, or any other route.
+
+## Addendum: server-side PDF export + Chrome extension
+
+Lets a person highlight a job description on any webpage, right-click, pick a saved person, and get both `resume.pdf` and `resume.docx` auto-downloaded — no need to open the web app. Built on branch `browser-extension`.
+
+**Constraint that shapes this:** the existing "Preview & Print PDF" path uses the browser's native print dialog, which always requires a manual click ("Save as PDF") — no extension can automate that. True automatic PDF download requires real server-side PDF generation.
+
+### New route: `POST /api/export-pdf`
+
+- Same contract shape as `/api/export-docx`: JSON body `{ resume: "<markdown>" }` in, binary out.
+- Renders the markdown to HTML via `marked` wrapped in a small self-contained print template (`lib/pdfTemplate.js` — the same visual rules as the existing print CSS: centered header, bold-uppercase bordered section headings, 9.5pt Arial body, `@page` letter size with 0.45in/0.6in margins), then uses **Puppeteer** (`page.setContent(html)` → `page.pdf({ preferCSSPageSize: true })`, letting the template's own `@page` CSS rule control size/margins as the single source of truth) to render a real PDF buffer.
+- Responds with `Content-Type: application/pdf`, `Content-Disposition: attachment; filename="resume.pdf"`.
+- On failure, 502 with `{ error }`, same pattern as the other routes.
+- New dep: `puppeteer` (bundles Chromium — heavy install, slower per-request; accepted trade-off for true silent auto-download).
+
+Web app itself is unchanged — `/api/export-pdf` is used only by the extension for now (browser print stays the web app's PDF path).
+
+### Chrome extension (`extension/`, Manifest V3, Chrome-only for now)
+
+- `manifest.json` — permissions: `contextMenus`, `downloads`, `notifications`, `storage` (for the server-URL option); `host_permissions` covering the configured local server URL. Manifest V3 extensions with `host_permissions` bypass page-level CORS for their own fetches, so no server CORS changes needed.
+- `options.html`/`options.js` — one text field for the server base URL (default `http://localhost:3000`, matching `.env.example`'s default `PORT`), saved via `chrome.storage.sync`.
+- `background.js` (service worker):
+  - On install/startup, builds a context menu: `context: "selection"` → parent item **Resume Builder** → submenu populated from `GET /api/people`, plus a leading "↻ Refresh list" item that rebuilds the submenu on demand (covers a person added after the menu was last built, without polling).
+  - On a person's menu item click: reads `info.selectionText` (the highlighted job description — Chrome hands this to the context-menu callback directly, no content script/injection needed) and the person id from the menu item id.
+  - Flow: `chrome.notifications.create` ("Tailoring for {person}…") → `POST {serverUrl}/api/tailor { personId, jobDescription: selectionText }` → on success, `POST /api/export-docx` and `POST /api/export-pdf` in parallel with the returned `resume` markdown → convert each response `Blob` to a data URI (service workers have no `URL.createObjectURL`) → `chrome.downloads.download()` each as `{person-slug}-resume.pdf` / `.docx` → success notification. Any failure at any step surfaces as an error notification with the message.
+  - No popup UI, no content script, no review/edit step — this is an intentionally fast lane; the web app keeps the manual review step untouched for when that's wanted instead.
+
+### Non-goals
+
+- No Firefox/other-browser support in this pass.
+- No web app UI changes.
+- No change to the no-fabrication tailoring rules — this reuses `/api/tailor` and `SKILL.md` exactly as-is.
