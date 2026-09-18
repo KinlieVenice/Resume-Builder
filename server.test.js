@@ -219,3 +219,39 @@ test('POST /api/extract-cv returns 502 when the model reply is not valid JSON', 
     server.close();
   }
 });
+
+test('POST /api/export-docx returns a docx buffer for the given markdown', async () => {
+  const { app } = makeApp();
+  const { server, base } = await listen(app);
+  try {
+    const res = await fetch(`${base}/api/export-docx`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resume: '# Ada Lovelace\n\nMathematician' }),
+    });
+    assert.equal(res.status, 200);
+    assert.equal(
+      res.headers.get('content-type'),
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    );
+    const buf = Buffer.from(await res.arrayBuffer());
+    assert.equal(buf.slice(0, 4).toString('hex'), '504b0304');
+  } finally {
+    server.close();
+  }
+});
+
+test('POST /api/export-docx returns 400 when resume is missing', async () => {
+  const { app } = makeApp();
+  const { server, base } = await listen(app);
+  try {
+    const res = await fetch(`${base}/api/export-docx`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    assert.equal(res.status, 400);
+  } finally {
+    server.close();
+  }
+});

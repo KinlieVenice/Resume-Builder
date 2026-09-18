@@ -7,6 +7,7 @@ const { slugify, listPeople, readCV, writeCV, deleteCV } = require('./lib/cvStor
 const { buildTailorMessages, parseTailorResponse } = require('./lib/promptBuilder');
 const { tailorWithOpenRouter } = require('./lib/openrouterClient');
 const { extractTextFromPdf, buildExtractMessages, parseExtractResponse } = require('./lib/extractCv');
+const { buildResumeHtml, renderDocxBuffer } = require('./lib/exportDocx');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
@@ -104,6 +105,25 @@ function createApp({
       const raw = await extractFn({ apiKey, model, messages, baseUrl });
       const cv = parseExtractResponse(raw);
       res.json(cv);
+    } catch (err) {
+      res.status(502).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/export-docx', async (req, res) => {
+    const { resume } = req.body || {};
+    if (!resume) {
+      return res.status(400).json({ error: 'resume is required' });
+    }
+
+    try {
+      const html = buildResumeHtml(resume);
+      const buffer = await renderDocxBuffer(html);
+      res.set({
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'Content-Disposition': 'attachment; filename="resume.docx"',
+      });
+      res.send(buffer);
     } catch (err) {
       res.status(502).json({ error: err.message });
     }
