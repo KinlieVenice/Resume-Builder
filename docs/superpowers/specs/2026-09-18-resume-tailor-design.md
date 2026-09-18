@@ -41,16 +41,17 @@ builder/
 ### Tailoring
 
 - `POST /api/tailor` `{ personId, jobDescription }`
-- Server loads `prompts/SKILL.md` (tailoring rules — no fabrication, quantify from source only, SWE/DevOps-oriented architecture and skills framing, JD-mirroring) + the person's master CV JSON + the job description, sends as a single chat request to OpenRouter (model: a Claude model, e.g. `anthropic/claude-sonnet-5`) using `OPENROUTER_API_KEY` from `.env`.
-- Model returns a Markdown resume (see SKILL.md for exact section format).
-- Server returns that markdown text as-is to the frontend. No JSON-schema parsing.
+- Server loads `prompts/SKILL.md` (tailoring rules — no fabrication, quantify from source only, SWE/DevOps/AI-ML-oriented architecture and skills framing depending on what the JD calls for, JD-mirroring) + the person's master CV JSON + the job description, sends as a single chat request to OpenRouter (model: a Claude model, e.g. `anthropic/claude-sonnet-5`) using `OPENROUTER_API_KEY` from `.env`.
+- Model returns two sections in one response: `## RESUME` (markdown resume) and `## MATCH_REPORT` (flat checklist of JD requirements, each line `- ✅ <requirement> — <reason>` or `- ❌ <requirement> — not found in master CV`). Exact format in SKILL.md.
+- Server splits the response on those two markers and regex-counts ✅ vs ❌ lines in the match report to compute `matchPercent = matched / (matched + unmatched) * 100` deterministically — the model is instructed not to state a percentage itself.
+- Server returns `{ resume: "<markdown>", matchReport: "<markdown checklist>", matchPercent: N }`. No further JSON-schema parsing of the resume/report content itself.
 
 ### Frontend flow
 
 1. **People tab** — list of saved people, add/edit/delete a master CV via a form (or raw JSON textarea — simplest: textarea of the structured JSON, since content is already structured data entered once and rarely changed).
-2. **Tailor tab** — pick person from dropdown, paste job description, click "Tailor" → calls `/api/tailor` → response fills an editable `<textarea>` with the markdown resume.
-3. User edits/double-checks the markdown freely in the textarea.
-4. "Preview & Print PDF" button → renders current textarea content through `marked` into styled HTML in a print-friendly view → `window.print()` (save as PDF via browser dialog).
+2. **Tailor tab** — pick person from dropdown, paste job description, click "Tailor" → calls `/api/tailor` → response fills an editable `<textarea>` with the markdown resume, plus a read-only side panel showing "Compatibility: NN% (X/Y matched)" and the rendered match checklist.
+3. User edits/double-checks the resume markdown freely in the textarea. Match report panel is informational only, not editable, no PDF export for it.
+4. "Preview & Print PDF" button (resume only) → renders current textarea content through `marked` into styled HTML in a print-friendly view → `window.print()` (save as PDF via browser dialog).
 
 ### Error handling
 
@@ -60,7 +61,7 @@ builder/
 
 ## SKILL.md (tailoring rules)
 
-Already drafted and approved (SWE/DevOps-tuned): absolute no-fabrication rule (only select/reorder/reword content already in the master CV; numbers only if stated or directly countable from stated facts), quantify-impact guidance, architecture-first framing for projects with DevOps-specific stat categories (CI/CD, cloud/infra, reliability, IaC, observability), SWE/DevOps skills grouping, JD-mirroring for selection/ordering, fixed Markdown output structure (Name/contact, Summary, Skills, Experience, Projects, Education).
+Already drafted and approved (SWE/DevOps/AI-ML-tuned — infers which to emphasize from the JD): absolute no-fabrication rule (only select/reorder/reword content already in the master CV; numbers only if stated or directly countable from stated facts), quantify-impact guidance, architecture-first framing for projects with stat categories spanning CI/CD, cloud/infra, reliability, IaC, observability, and ML/AI (dataset size, model metrics, training cost/time), matching skills grouping, JD-mirroring for selection/ordering, and the two-section Markdown output (`## RESUME`, `## MATCH_REPORT` checklist — no self-stated percentage, backend computes it).
 
 File lives at `prompts/SKILL.md`, loaded fresh on each `/api/tailor` call (so editing the file changes behavior without restarting the server).
 

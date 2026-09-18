@@ -28,18 +28,19 @@ If the master CV states a number, lead the bullet with it. If a number is direct
 
 ## Highlight architecture, not just tasks
 
-Target audience: software engineering and DevOps roles. Favor bullets that show system-level thinking: what was designed/built, key components, scale/constraints handled, tradeoffs made, tech stack. Prefer "Designed and built a real-time X pipeline (Kafka → Flink → Postgres) handling Y events/day" over "Worked on data pipeline."
+Target audience: software engineering, DevOps, AI/ML engineering roles — infer which from the job description and emphasize accordingly. Favor bullets that show system-level thinking: what was designed/built, key components, scale/constraints handled, tradeoffs made, tech stack. Prefer "Designed and built a real-time X pipeline (Kafka → Flink → Postgres) handling Y events/day" over "Worked on data pipeline."
 
-For DevOps/infra work specifically, surface (only if stated or countable in the master CV):
+Surface these, only if stated or countable in the master CV, matching whichever apply to the JD:
 - CI/CD: pipeline count, deploy frequency, build/deploy time reduced
 - Infra/cloud: services managed, environments, cost reduced, regions
 - Reliability: uptime %, incident/MTTR reduction, alerts handled
 - IaC/automation: resources managed, manual steps eliminated
 - Observability: dashboards/metrics/logs set up, coverage added
+- ML/AI: dataset size, model size/params, accuracy/F1/latency/throughput metrics, training time/cost reduced, features shipped to production, experiments run
 
 ## Skills grouping
 
-Group skills under headings relevant to SWE/DevOps roles, using only groups the master CV actually supports: Languages, Frameworks/Libraries, Cloud/Infra (AWS/GCP/Azure/etc.), CI/CD, Containers/Orchestration, IaC, Databases, Observability/Monitoring, Other Tools. Skip empty groups.
+Group skills under headings relevant to the JD's role type, using only groups the master CV actually supports: Languages, Frameworks/Libraries, Cloud/Infra (AWS/GCP/Azure/etc.), CI/CD, Containers/Orchestration, IaC, Databases, Observability/Monitoring, ML/AI (frameworks like PyTorch/TensorFlow, MLOps tools, data/experiment tooling), Other Tools. Skip empty groups.
 
 ## Tailor to the job description
 
@@ -50,7 +51,17 @@ Group skills under headings relevant to SWE/DevOps roles, using only groups the 
 
 ## Output format
 
-Return a complete resume in Markdown:
+Return exactly two sections, in this order, each starting with the literal heading shown:
+
+```
+## RESUME
+<the tailored resume>
+
+## MATCH_REPORT
+<the checklist>
+```
+
+**RESUME** — Markdown:
 - `# Name` + contact line
 - `## Summary` — 2-3 sentences, tailored to this JD, built only from master CV facts
 - `## Skills` — grouped, most JD-relevant first
@@ -59,3 +70,9 @@ Return a complete resume in Markdown:
 - `## Education`
 
 Keep bullets concise (one line each where possible), action-verb first, quantified where the master CV supports it.
+
+**MATCH_REPORT** — one line per distinct requirement/skill you can identify in the job description, as a flat list:
+- `- ✅ <requirement> — <short reason, citing what's in the master CV>` if the master CV supports it
+- `- ❌ <requirement> — not found in master CV` if it doesn't
+
+Do not compute or state a percentage yourself — the app computes it from your ✅/❌ counts. List every distinct requirement you can identify in the JD; don't skip ones the master CV fails.
