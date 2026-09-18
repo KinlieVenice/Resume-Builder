@@ -94,3 +94,19 @@ Lets a person upload an existing resume PDF instead of hand-writing the master C
 **Frontend:** People tab gets an "Upload PDF" `<input type="file">` next to "+ Add person". On file selection: POST multipart to `/api/extract-cv`, on success populate the **New person** JSON textarea with the returned JSON (not auto-saved — same manual review-then-Save step as today), on failure show the error in the existing `#cv-error` element.
 
 No change to `cvStore`, `/api/people`, `/api/cv/:id`, or the tailoring flow — this only adds a new way to pre-fill the JSON editor.
+
+## Addendum: Export resume as Word (.docx)
+
+Lets a person download the tailored resume as a real `.docx` file, alongside the existing browser-print-to-PDF path. Not a PDF→Word conversion (lossy/unreliable) — generated straight from the same resume markdown that already feeds the PDF preview.
+
+**New dep:** `html-to-docx` (HTML → genuine OOXML `.docx` buffer, Node-only — no browser-native way to build a real Word file, so this has to be a server round-trip).
+
+**New route:** `POST /api/export-docx`, JSON body `{ resume: "<markdown>" }`.
+- Render the markdown to HTML via `marked` (same rendering used for the print view), with `breaks: true` to match.
+- Convert that HTML to a `.docx` buffer via `html-to-docx`.
+- Respond with the binary buffer, `Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document`, `Content-Disposition: attachment; filename="resume.docx"`.
+- On any failure, respond 502 with `{ error }`, same pattern as the other model/render routes.
+
+**Frontend:** new "Export Word" button next to "Preview & Print PDF" in the Tailor tab's resume column. On click: POST the current `#resume-markdown` textarea value (so edits made before export are included) to `/api/export-docx`, receive the binary response as a `Blob`, trigger a download via a temporary `<a download>` link.
+
+No change to the tailoring flow, PDF/print path, or any other route.
