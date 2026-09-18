@@ -93,7 +93,9 @@ Return exactly two sections, in this order, each starting with the literal headi
 - {bullet}
 
 ## SELECTED PROJECTS
-- **{Project}** ({stack}). {one-line description with impact, ideally a number}.
+**{Project}** ({stack})
+- {bullet: what was built/the core mechanism, with impact if the master CV supports a number}
+- {bullet: a second distinct angle — scale, outcome, adoption, or a technical decision — not a rephrase of the first bullet}
 
 ## EDUCATION
 **{School} — {Location}** ({Graduation date})
@@ -109,7 +111,7 @@ Add a `## LEADERSHIP` or `## AWARDS` section in the same style only if the maste
 **Conciseness and length budget — this resume prints to a max 2-page PDF:**
 - Every bullet is one line, two at the absolute most. Target ≤ 20 words per bullet. Cut qualifiers and throat-clearing ("responsible for", "worked on") — start with the action and the result.
 - Most recent / most JD-relevant role: up to 4-5 bullets. Older or less relevant roles: 2-3 bullets. Internships/short stints: 1-2.
-- Selected Projects: 3-5 entries, one line each.
+- Selected Projects: the master CV may list many projects — pick at most 5, whichever are most relevant to this JD, and give each exactly 2 bullets (see the SELECTED PROJECTS format above). Leave the rest out entirely rather than listing more projects with thinner coverage.
 - If the master CV has more true content than comfortably fits 2 pages at this density, cut whole low-relevance bullets, projects, or older roles first — never shrink a true fact into a misleading one to save space, and never fabricate a shorter version that drops the substance silently.
 
 **MATCH_REPORT** — one line per distinct requirement/skill you can identify in the job description, as a flat list:
