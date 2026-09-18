@@ -1,0 +1,124 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0 1.5rem 2rem;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.tab-btn {
+  padding: 0.5rem 1rem;
+  margin-left: 0.5rem;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  font-weight: bold;
+  border-bottom: 2px solid #333;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.people-layout {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.people-list {
+  width: 220px;
+}
+
+.people-list ul {
+  list-style: none;
+  padding: 0;
+}
+
+.people-list li {
+  padding: 0.4rem 0.5rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.people-list li.selected {
+  background: #e0e8ff;
+}
+
+.cv-editor {
+  flex: 1;
+}
+
+textarea {
+  width: 100%;
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  box-sizing: border-box;
+}
+
+.cv-editor-actions {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+button.danger {
+  background: #c0392b;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.error {
+  color: #c0392b;
+  min-height: 1.2em;
+}
+
+.tailor-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 700px;
+  margin-top: 1rem;
+}
+
+.tailor-results {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.resume-column,
+.match-column {
+  flex: 1;
+}
+
+.match-percent {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.match-report ul {
+  padding-left: 1.2rem;
+}
+
+@media print {
+  header, #people-panel, .tailor-controls, .resume-column textarea, #print-btn, .match-column {
+    display: none !important;
+  }
+  #print-view {
+    display: block !important;
+  }
+}
