@@ -75,3 +75,22 @@ File lives at `prompts/SKILL.md`, loaded fresh on each `/api/tailor` call (so ed
 
 - Not fixed to "me" and "friend" — arbitrary people, added/edited in the UI.
 - Local git repo's commit email for this project set to `kinlievenicedeguzman@gmail.com` (local override, global config untouched).
+
+## Addendum: PDF → master CV import
+
+Lets a person upload an existing resume PDF instead of hand-writing the master CV JSON.
+
+**New deps:** `pdf-parse` (extract raw text from a PDF buffer, no OCR), `multer` (multipart file upload handling).
+
+**New prompt file:** `prompts/EXTRACT.md` — system prompt instructing the model to convert raw resume text into JSON matching the master CV shape (`name, contact, summary, skills[], experience[], projects[], education[]`, plus optional `certifications[]`/`leadership[]` if present), faithfully — capture every real fact, invent nothing not in the source text. Loaded fresh per request, same pattern as `SKILL.md`.
+
+**New route:** `POST /api/extract-cv`, multipart body with a single `pdf` file field.
+- Extract text via `pdf-parse`.
+- Build a chat request: `EXTRACT.md` as system prompt, extracted text as user content.
+- Call the same LLM gateway function used for tailoring (reuse `tailorWithOpenRouter`, generic name already — it just sends messages and returns text).
+- Parse the model's reply as JSON (strip ```json fences if present). On parse failure, return 502 with the raw text so the error is visible, same pattern as `/api/tailor`.
+- Return the parsed JSON to the frontend.
+
+**Frontend:** People tab gets an "Upload PDF" `<input type="file">` next to "+ Add person". On file selection: POST multipart to `/api/extract-cv`, on success populate the **New person** JSON textarea with the returned JSON (not auto-saved — same manual review-then-Save step as today), on failure show the error in the existing `#cv-error` element.
+
+No change to `cvStore`, `/api/people`, `/api/cv/:id`, or the tailoring flow — this only adds a new way to pre-fill the JSON editor.
