@@ -11,7 +11,11 @@ Tailors a master CV (yours or a friend's) to a pasted job description using Clau
 
 ## Usage
 
-1. **People tab** — add a person, paste their full master CV as JSON (name, contact, summary, skills, experience, projects, education). Save. Add as many people as you want — not limited to any fixed number.
+1. **People tab** — add a person two ways:
+   - **Upload PDF** — pick an existing resume PDF and it extracts into the JSON editor for you to review (never auto-saved).
+   - **+ Add person** — paste their full master CV as JSON by hand (name, contact, summary, skills, experience, projects, education).
+
+   Either way, review/edit the JSON then click Save. Add as many people as you want — not limited to any fixed number.
 2. **Tailor tab** — pick a person, paste a job description, click Tailor.
 3. Review/edit the generated resume in the textarea — it's built only from facts in that person's master CV (see `prompts/SKILL.md` for the exact rules the model follows).
 4. Check the Compatibility panel for the match % and which requirements were and weren't found in the master CV.
