@@ -10,17 +10,22 @@ function tmpDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'resume-tailor-test-'));
 }
 
-function makeApp({ tailorFn, baseUrl } = {}) {
+function makeApp({ tailorFn, baseUrl, extractFn, pdfParseImpl } = {}) {
   const cvsDir = tmpDir();
   const skillPath = path.join(tmpDir(), 'SKILL.md');
   fs.writeFileSync(skillPath, 'TEST SKILL RULES');
+  const extractSkillPath = path.join(tmpDir(), 'EXTRACT.md');
+  fs.writeFileSync(extractSkillPath, 'TEST EXTRACT RULES');
   const app = createApp({
     cvsDir,
     skillPath,
+    extractSkillPath,
     apiKey: 'test-key',
     model: 'anthropic/claude-sonnet-5',
     baseUrl,
     tailorFn,
+    extractFn,
+    pdfParseImpl,
   });
   return { app, cvsDir };
 }
@@ -160,6 +165,56 @@ test('POST /api/tailor 404s for an unknown person', async () => {
       body: JSON.stringify({ personId: 'nobody', jobDescription: 'x' }),
     });
     assert.equal(res.status, 404);
+  } finally {
+    server.close();
+  }
+});
+
+test('POST /api/extract-cv returns parsed CV JSON from injected extractFn/pdfParseImpl', async () => {
+  const fakePdfParse = async () => ({ text: 'Ada Lovelace resume text' });
+  const fakeExtractFn = async ({ messages }) => {
+    assert.equal(messages[0].content, 'TEST EXTRACT RULES');
+    assert.ok(messages[1].content.includes('Ada Lovelace resume text'));
+    return '{"name": "Ada Lovelace", "skills": ["math"]}';
+  };
+  const { app } = makeApp({ extractFn: fakeExtractFn, pdfParseImpl: fakePdfParse });
+  const { server, base } = await listen(app);
+  try {
+    const form = new FormData();
+    form.append('pdf', new Blob([Buffer.from('fake pdf bytes')]), 'resume.pdf');
+    const res = await fetch(`${base}/api/extract-cv`, { method: 'POST', body: form });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.deepEqual(body, { name: 'Ada Lovelace', skills: ['math'] });
+  } finally {
+    server.close();
+  }
+});
+
+test('POST /api/extract-cv returns 400 when no file is attached', async () => {
+  const { app } = makeApp();
+  const { server, base } = await listen(app);
+  try {
+    const form = new FormData();
+    const res = await fetch(`${base}/api/extract-cv`, { method: 'POST', body: form });
+    assert.equal(res.status, 400);
+  } finally {
+    server.close();
+  }
+});
+
+test('POST /api/extract-cv returns 502 when the model reply is not valid JSON', async () => {
+  const fakePdfParse = async () => ({ text: 'garbled text' });
+  const fakeExtractFn = async () => 'not json';
+  const { app } = makeApp({ extractFn: fakeExtractFn, pdfParseImpl: fakePdfParse });
+  const { server, base } = await listen(app);
+  try {
+    const form = new FormData();
+    form.append('pdf', new Blob([Buffer.from('fake pdf bytes')]), 'resume.pdf');
+    const res = await fetch(`${base}/api/extract-cv`, { method: 'POST', body: form });
+    assert.equal(res.status, 502);
+    const body = await res.json();
+    assert.match(body.error, /not valid JSON/);
   } finally {
     server.close();
   }

@@ -2,17 +2,24 @@
 const path = require('node:path');
 const fs = require('node:fs');
 const express = require('express');
+const multer = require('multer');
 const { slugify, listPeople, readCV, writeCV, deleteCV } = require('./lib/cvStore');
 const { buildTailorMessages, parseTailorResponse } = require('./lib/promptBuilder');
 const { tailorWithOpenRouter } = require('./lib/openrouterClient');
+const { extractTextFromPdf, buildExtractMessages, parseExtractResponse } = require('./lib/extractCv');
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 function createApp({
   cvsDir,
   skillPath,
+  extractSkillPath,
   apiKey,
   model,
   baseUrl,
   tailorFn = tailorWithOpenRouter,
+  extractFn = tailorWithOpenRouter,
+  pdfParseImpl,
 }) {
   const app = express();
   app.use(express.json());
@@ -85,6 +92,23 @@ function createApp({
     }
   });
 
+  app.post('/api/extract-cv', upload.single('pdf'), async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: 'pdf file is required (field name "pdf")' });
+    }
+
+    try {
+      const resumeText = await extractTextFromPdf(req.file.buffer, pdfParseImpl);
+      const skillText = fs.readFileSync(extractSkillPath, 'utf8');
+      const messages = buildExtractMessages({ skillText, resumeText });
+      const raw = await extractFn({ apiKey, model, messages, baseUrl });
+      const cv = parseExtractResponse(raw);
+      res.json(cv);
+    } catch (err) {
+      res.status(502).json({ error: err.message });
+    }
+  });
+
   return app;
 }
 
@@ -100,6 +124,7 @@ if (require.main === module) {
   const app = createApp({
     cvsDir: path.join(__dirname, 'cvs'),
     skillPath: path.join(__dirname, 'prompts', 'SKILL.md'),
+    extractSkillPath: path.join(__dirname, 'prompts', 'EXTRACT.md'),
     apiKey,
     model: process.env.OPENROUTER_MODEL || 'anthropic/claude-sonnet-5',
     baseUrl: process.env.OPENROUTER_BASE_URL,
