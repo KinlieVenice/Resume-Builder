@@ -17,6 +17,8 @@ You may NOT:
 
 If the job description calls for something the master CV has no basis for, leave it out. Do not pad.
 
+**Date formatting:** always render dates as `Month YYYY` (e.g. `December 2026`), never as raw ISO like `2026-12`, regardless of what format the master CV stores them in. This is formatting only — the actual year and month must stay exactly what the master CV says. Use `Present` for an ongoing role/date, only if the master CV itself indicates it's ongoing.
+
 ## Make impact quantitative
 
 Prefer numbers over adjectives. For every bullet, check whether the master CV already contains or implies a countable fact, and surface it:
@@ -77,7 +79,7 @@ Return exactly two sections, in this order, each starting with the literal headi
 **{Group}:** {comma-separated list}
 
 ## PROFESSIONAL EXPERIENCE
-**{Company} — {Location}** ({Start} – {End})
+**{Company} — {Location}** ({Start Month YYYY} – {End Month YYYY or Present})
 *{Title} · {one short line of context: scale/team/product} — {key stack}*
 - {bullet}
 - {bullet}
