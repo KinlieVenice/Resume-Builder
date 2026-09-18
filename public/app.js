@@ -72,6 +72,32 @@ el('new-person-btn').addEventListener('click', () => {
   el('cv-error').textContent = '';
 });
 
+el('upload-pdf-input').addEventListener('change', async () => {
+  const file = el('upload-pdf-input').files[0];
+  if (!file) return;
+
+  el('upload-error').textContent = '';
+  const form = new FormData();
+  form.append('pdf', file);
+
+  try {
+    const res = await fetch('/api/extract-cv', { method: 'POST', body: form });
+    const body = await res.json();
+    if (!res.ok) {
+      throw new Error(body.error || 'PDF extraction failed');
+    }
+    state.selectedPersonId = null;
+    renderPeopleList();
+    el('cv-editor-title').textContent = `${body.name} (from PDF — review before saving)`;
+    el('cv-json').value = JSON.stringify(body, null, 2);
+    el('cv-error').textContent = '';
+  } catch (err) {
+    el('upload-error').textContent = err.message;
+  } finally {
+    el('upload-pdf-input').value = '';
+  }
+});
+
 el('save-cv-btn').addEventListener('click', async () => {
   let cv;
   try {

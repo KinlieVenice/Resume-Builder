@@ -72,6 +72,16 @@ textarea {
   gap: 0.5rem;
 }
 
+.upload-label {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #999;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+}
+
 button.danger {
   background: #c0392b;
   color: white;
