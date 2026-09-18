@@ -7,7 +7,7 @@ const { slugify, listPeople, readCV, writeCV, deleteCV } = require('./lib/cvStor
 const { buildTailorMessages, parseTailorResponse } = require('./lib/promptBuilder');
 const { tailorWithOpenRouter } = require('./lib/openrouterClient');
 const { extractTextFromPdf, buildExtractMessages, parseExtractResponse } = require('./lib/extractCv');
-const { buildResumeHtml, renderDocxBuffer } = require('./lib/exportDocx');
+const { renderDocxBuffer } = require('./lib/exportDocx');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
@@ -117,8 +117,7 @@ function createApp({
     }
 
     try {
-      const html = buildResumeHtml(resume);
-      const buffer = await renderDocxBuffer(html);
+      const buffer = await renderDocxBuffer(resume);
       res.set({
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': 'attachment; filename="resume.docx"',

@@ -99,11 +99,11 @@ No change to `cvStore`, `/api/people`, `/api/cv/:id`, or the tailoring flow — 
 
 Lets a person download the tailored resume as a real `.docx` file, alongside the existing browser-print-to-PDF path. Not a PDF→Word conversion (lossy/unreliable) — generated straight from the same resume markdown that already feeds the PDF preview.
 
-**New dep:** `html-to-docx` (HTML → genuine OOXML `.docx` buffer, Node-only — no browser-native way to build a real Word file, so this has to be a server round-trip).
+**Dep:** `docx` (dolanmiu/docx) — builds the `.docx` directly from paragraph/run/border objects, no HTML/CSS translation layer and no vulnerable transitive deps (unlike the first pass, which used `html-to-docx`; that library's inline-CSS-to-OOXML translation only supports a narrow property set — no margin/border/hr, and nested formatting tags silently drop one another — verified against the real generated XML before ruling it out, then swapped to `docx` for true parity with the PDF's borders/spacing).
 
 **New route:** `POST /api/export-docx`, JSON body `{ resume: "<markdown>" }`.
-- Render the markdown to HTML via `marked` (same rendering used for the print view), with `breaks: true` to match.
-- Convert that HTML to a `.docx` buffer via `html-to-docx`.
+- Parse the resume markdown directly (own line-based parser in `lib/exportDocx.js`, not `marked`) into `docx.Paragraph`/`TextRun` objects: centered bold name, centered contact block, bold-uppercase-with-bottom-border section headings, real bullet-numbered list items, `**bold**`/`*italic*` inline runs — matching the print CSS's page size/margins/font/sizes.
+- Pack via `docx`'s `Packer.toBuffer()`.
 - Respond with the binary buffer, `Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document`, `Content-Disposition: attachment; filename="resume.docx"`.
 - On any failure, respond 502 with `{ error }`, same pattern as the other model/render routes.
 
