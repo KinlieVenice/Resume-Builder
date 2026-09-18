@@ -82,6 +82,12 @@ textarea {
   text-align: center;
 }
 
+.upload-label.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: default;
+}
+
 button.danger {
   background: #c0392b;
   color: white;
@@ -94,6 +100,11 @@ button.danger {
 .error {
   color: #c0392b;
   min-height: 1.2em;
+}
+
+.status {
+  color: #555;
+  font-style: italic;
 }
 
 .tailor-controls {

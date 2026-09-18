@@ -80,6 +80,10 @@ el('upload-pdf-input').addEventListener('change', async () => {
   const form = new FormData();
   form.append('pdf', file);
 
+  el('upload-status').classList.remove('hidden');
+  el('upload-label').classList.add('disabled');
+  el('upload-pdf-input').disabled = true;
+
   try {
     const res = await fetch('/api/extract-cv', { method: 'POST', body: form });
     const body = await res.json();
@@ -95,6 +99,9 @@ el('upload-pdf-input').addEventListener('change', async () => {
     el('upload-error').textContent = err.message;
   } finally {
     el('upload-pdf-input').value = '';
+    el('upload-status').classList.add('hidden');
+    el('upload-label').classList.remove('disabled');
+    el('upload-pdf-input').disabled = false;
   }
 });
 
@@ -151,6 +158,7 @@ el('tailor-btn').addEventListener('click', async () => {
   }
 
   el('tailor-btn').disabled = true;
+  el('tailor-btn').textContent = 'Tailoring…';
   try {
     const res = await fetch('/api/tailor', {
       method: 'POST',
@@ -169,6 +177,7 @@ el('tailor-btn').addEventListener('click', async () => {
     el('tailor-error').textContent = err.message;
   } finally {
     el('tailor-btn').disabled = false;
+    el('tailor-btn').textContent = 'Tailor';
   }
 });
 

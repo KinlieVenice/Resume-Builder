@@ -22,8 +22,9 @@
         <h2>Saved people</h2>
         <ul id="people-list"></ul>
         <button id="new-person-btn">+ Add person</button>
-        <label for="upload-pdf-input" class="upload-label">Upload PDF</label>
+        <label for="upload-pdf-input" id="upload-label" class="upload-label">Upload PDF</label>
         <input type="file" id="upload-pdf-input" accept="application/pdf" class="hidden" />
+        <p id="upload-status" class="status hidden">Extracting…</p>
         <p id="upload-error" class="error"></p>
       </div>
       <div class="cv-editor">
