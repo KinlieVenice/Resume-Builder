@@ -110,3 +110,71 @@ Lets a person download the tailored resume as a real `.docx` file, alongside the
 **Frontend:** new "Export Word" button next to "Preview & Print PDF" in the Tailor tab's resume column. On click: POST the current `#resume-markdown` textarea value (so edits made before export are included) to `/api/export-docx`, receive the binary response as a `Blob`, trigger a download via a temporary `<a download>` link.
 
 No change to the tailoring flow, PDF/print path, or any other route.
+
+## Addendum: SQLite storage + job application tracker
+
+Moves master CV storage from `cvs/*.json` files to SQLite, and adds a job-application tracker: paste a job posting's text + its link, AI fills in the fact fields, the row lands in a table you can edit/filter/delete.
+
+**Context:** this app is now planned for deployment on a private VPS (previously local-machine-only). That deployment currently has no authentication — flagged as a known gap to revisit later, explicitly out of scope for this addendum.
+
+### Storage
+
+- New `lib/db.js` opens a single SQLite file via Node's built-in `node:sqlite` (`DatabaseSync` — no new npm dependency; available and verified working on the Node 24 this project runs). Confirmed working directly before committing to it.
+- DB file lives at `data/resume-tailor.db`, gitignored (same treatment `cvs/*.json` had) — only `data/.gitkeep` is tracked.
+- Creates two tables if missing, on open:
+  ```sql
+  CREATE TABLE IF NOT EXISTS people (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    cv_json TEXT NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS jobs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    person_id TEXT NOT NULL,
+    date_applied TEXT NOT NULL,
+    job_title TEXT,
+    brief_desc TEXT,
+    company TEXT,
+    salary TEXT,
+    status TEXT NOT NULL,
+    link TEXT
+  );
+  ```
+- `people.cv_json` stores the whole master CV as a JSON blob (same shape as today's files) — keeps the schema flexible for whatever fields a CV has, rather than forcing a rigid relational shape.
+
+### `cvStore.js` rewrite
+
+- Same exported function names/shapes as today (`slugify`, `listPeople`, `readCV`, `writeCV`, `deleteCV`), but the first argument becomes a `db` handle instead of a directory path — minimizes the ripple into `server.js`'s route bodies, which stay structurally the same.
+- One-time migration: existing `cvs/*.json` files get imported into the new `people` table during this implementation, so the real profile already in `cvs/` isn't lost. A small one-off script (`scripts/import-cvs.js`) does this and stays in the repo in case anyone needs to re-run it after a fresh clone with old-style `cvs/*.json` files present.
+- `cvs/` directory and its gitignore entry get removed once the migration script exists and has been run.
+
+### `lib/jobsStore.js` (new)
+
+- `listJobs(db, personId): job[]` — all jobs for a person, newest `date_applied` first.
+- `createJob(db, { personId, dateApplied, jobTitle, briefDesc, company, salary, status, link }): job` — inserts, returns the row with its new `id`.
+- `updateJob(db, id, fields): job` — merges the given fields into the row (used for inline cell edits).
+- `deleteJob(db, id): void`.
+
+### `prompts/EXTRACT_JOB.md` (new)
+
+Same no-fabrication rule as `SKILL.md`/`EXTRACT.md`: extract `jobTitle`, `company`, `briefDesc` (a 1-2 sentence honest summary of the role, not padded), and `salary` (only if stated — leave blank rather than guess, salary ranges are frequently absent from postings) from the pasted job posting text. Output a small JSON object, same code-fence-stripping parse pattern as `EXTRACT.md`.
+
+### New routes
+
+- `GET /api/jobs?personId=<id>` — list a person's jobs.
+- `POST /api/jobs` — body `{ personId, jobDescription, link }`. Server builds a request with `EXTRACT_JOB.md` + the pasted text, gets back `{jobTitle, company, briefDesc, salary}`, combines with server-set `dateApplied` (today's date) and `status` (defaults to `"Submitted"`), inserts via `jobsStore.createJob`, returns the full row. On model/parse failure, 502 with `{error}`.
+- `PUT /api/jobs/:id` — body is any subset of the editable fields (including `status`, `link`, or a manual correction to any AI-filled field). Used by every inline table edit.
+- `DELETE /api/jobs/:id` — removes a row (not explicitly requested, included for basic CRUD completeness alongside an editable table).
+
+### Frontend: new "Jobs" tab
+
+- Person filter dropdown at the top (same people list as the other tabs) — selects whose jobs are shown; nothing renders until a person is picked.
+- A paste box for the job posting text + a separate "Link" text input (the pasted text doesn't reliably contain the URL, so this stays a manual field, not AI-extracted) + "Save this job" button. On click: `POST /api/jobs`, the new row appends to the table below (sorted newest-applied-first).
+- Table columns, in this order: Date Applied | Job Title | Brief Desc | Company | Salary | Status | Link | (delete).
+- Every cell is a live, always-editable input (text inputs for the free-text columns, a `<select>` for Status with options Submitted / Called / Interviewed / Job Offer / Rejected, a text input for Link). Editing a cell fires `PUT /api/jobs/:id` with just that field on change/blur — no separate edit-mode toggle, matches "whole row editable" directly.
+- No preview/confirm step before a pasted job is saved — matches the fast-lane pattern already used for the browser extension: save immediately with AI-filled fields, fix any cell inline afterward if something's off.
+
+### Non-goals (this addendum)
+
+- No auth/VPS-hardening work — flagged separately, deferred.
+- No CSV export, no job-board integration, no reminder/notification system for status changes.
