@@ -135,6 +135,47 @@ button.danger {
   padding-left: 1.2rem;
 }
 
+.jobs-controls {
+  margin-top: 1rem;
+  max-width: 300px;
+}
+
+.jobs-save-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-width: 700px;
+  margin-top: 1rem;
+}
+
+#jobs-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+}
+
+#jobs-table th,
+#jobs-table td {
+  border: 1px solid #ccc;
+  padding: 0.3rem;
+  text-align: left;
+}
+
+#jobs-table input,
+#jobs-table select {
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  font-size: 0.9rem;
+  background: transparent;
+}
+
+#jobs-table input:focus,
+#jobs-table select:focus {
+  background: #fffbe0;
+}
+
 @media print {
   @page {
     size: letter;
