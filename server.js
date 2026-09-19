@@ -8,18 +8,26 @@ const { buildTailorMessages, parseTailorResponse } = require('./lib/promptBuilde
 const { tailorWithOpenRouter } = require('./lib/openrouterClient');
 const { extractTextFromPdf, buildExtractMessages, parseExtractResponse } = require('./lib/extractCv');
 const { renderDocxBuffer } = require('./lib/exportDocx');
+const { listJobs, createJob, updateJob, deleteJob, parseJobFields } = require('./lib/jobsStore');
+const { openDb } = require('./lib/db');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
+function todayDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function createApp({
-  cvsDir,
+  db,
   skillPath,
   extractSkillPath,
+  extractJobSkillPath,
   apiKey,
   model,
   baseUrl,
   tailorFn = tailorWithOpenRouter,
   extractFn = tailorWithOpenRouter,
+  jobExtractFn = tailorWithOpenRouter,
   pdfParseImpl,
 }) {
   const app = express();
@@ -27,7 +35,7 @@ function createApp({
   app.use(express.static(path.join(__dirname, 'public')));
 
   app.get('/api/people', (req, res) => {
-    res.json(listPeople(cvsDir));
+    res.json(listPeople(db));
   });
 
   app.post('/api/people', (req, res) => {
@@ -37,17 +45,25 @@ function createApp({
     }
     let id = slugify(cv.name);
     let suffix = 2;
-    while (fs.existsSync(path.join(cvsDir, `${id}.json`))) {
+    const idTaken = (candidate) => {
+      try {
+        readCV(db, candidate);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+    while (idTaken(id)) {
       id = `${slugify(cv.name)}-${suffix}`;
       suffix += 1;
     }
-    writeCV(cvsDir, id, cv);
+    writeCV(db, id, cv);
     res.status(201).json({ id, ...cv });
   });
 
   app.get('/api/cv/:id', (req, res) => {
     try {
-      res.json(readCV(cvsDir, req.params.id));
+      res.json(readCV(db, req.params.id));
     } catch (err) {
       res.status(404).json({ error: err.message });
     }
@@ -55,16 +71,16 @@ function createApp({
 
   app.put('/api/cv/:id', (req, res) => {
     try {
-      readCV(cvsDir, req.params.id);
+      readCV(db, req.params.id);
     } catch (err) {
       return res.status(404).json({ error: err.message });
     }
-    writeCV(cvsDir, req.params.id, req.body);
+    writeCV(db, req.params.id, req.body);
     res.json(req.body);
   });
 
   app.delete('/api/cv/:id', (req, res) => {
-    deleteCV(cvsDir, req.params.id);
+    deleteCV(db, req.params.id);
     res.status(204).end();
   });
 
@@ -76,7 +92,7 @@ function createApp({
 
     let cv;
     try {
-      cv = readCV(cvsDir, personId);
+      cv = readCV(db, personId);
     } catch (err) {
       return res.status(404).json({ error: err.message });
     }
@@ -128,6 +144,59 @@ function createApp({
     }
   });
 
+  app.get('/api/jobs', (req, res) => {
+    const { personId } = req.query;
+    if (!personId) {
+      return res.status(400).json({ error: 'personId is required' });
+    }
+    res.json(listJobs(db, personId));
+  });
+
+  app.post('/api/jobs', async (req, res) => {
+    const { personId, jobDescription, link } = req.body || {};
+    if (!personId || !jobDescription) {
+      return res.status(400).json({ error: 'personId and jobDescription are required' });
+    }
+
+    const extractJobSkillText = fs.readFileSync(extractJobSkillPath, 'utf8');
+    const messages = [
+      { role: 'system', content: extractJobSkillText },
+      { role: 'user', content: `JOB POSTING TEXT:\n\n${jobDescription}` },
+    ];
+
+    try {
+      const raw = await jobExtractFn({ apiKey, model, messages, baseUrl });
+      const fields = parseJobFields(raw);
+      const job = createJob(db, {
+        personId,
+        dateApplied: todayDate(),
+        jobTitle: fields.jobTitle || '',
+        briefDesc: fields.briefDesc || '',
+        company: fields.company || '',
+        salary: fields.salary || '',
+        status: 'Submitted',
+        link: link || '',
+      });
+      res.status(201).json(job);
+    } catch (err) {
+      res.status(502).json({ error: err.message });
+    }
+  });
+
+  app.put('/api/jobs/:id', (req, res) => {
+    try {
+      const job = updateJob(db, Number(req.params.id), req.body || {});
+      res.json(job);
+    } catch (err) {
+      res.status(404).json({ error: err.message });
+    }
+  });
+
+  app.delete('/api/jobs/:id', (req, res) => {
+    deleteJob(db, Number(req.params.id));
+    res.status(204).end();
+  });
+
   return app;
 }
 
@@ -140,10 +209,14 @@ if (require.main === module) {
     console.error('Missing OPENROUTER_API_KEY in .env — see .env.example');
     process.exit(1);
   }
+  const dataDir = path.join(__dirname, 'data');
+  fs.mkdirSync(dataDir, { recursive: true });
+  const db = openDb(path.join(dataDir, 'resume-tailor.db'));
   const app = createApp({
-    cvsDir: path.join(__dirname, 'cvs'),
+    db,
     skillPath: path.join(__dirname, 'prompts', 'SKILL.md'),
     extractSkillPath: path.join(__dirname, 'prompts', 'EXTRACT.md'),
+    extractJobSkillPath: path.join(__dirname, 'prompts', 'EXTRACT_JOB.md'),
     apiKey,
     model: process.env.OPENROUTER_MODEL || 'anthropic/claude-sonnet-5',
     baseUrl: process.env.OPENROUTER_BASE_URL,
