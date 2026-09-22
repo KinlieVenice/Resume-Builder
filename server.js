@@ -8,7 +8,7 @@ const { buildTailorMessages, parseTailorResponse } = require('./lib/promptBuilde
 const { tailorWithOpenRouter } = require('./lib/openrouterClient');
 const { extractTextFromPdf, buildExtractMessages, parseExtractResponse } = require('./lib/extractCv');
 const { renderDocxBuffer } = require('./lib/exportDocx');
-const { listJobs, createJob, updateJob, deleteJob, parseJobFields } = require('./lib/jobsStore');
+const { listJobs, findJobByLink, createJob, updateJob, deleteJob, parseJobFields } = require('./lib/jobsStore');
 const { openDb } = require('./lib/db');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -158,6 +158,11 @@ function createApp({
       return res.status(400).json({ error: 'personId and jobDescription are required' });
     }
 
+    const existing = findJobByLink(db, personId, link);
+    if (existing) {
+      return res.status(200).json({ ...existing, alreadySaved: true });
+    }
+
     const extractJobSkillText = fs.readFileSync(extractJobSkillPath, 'utf8');
     const messages = [
       { role: 'system', content: extractJobSkillText },
@@ -177,7 +182,7 @@ function createApp({
         status: 'Submitted',
         link: link || '',
       });
-      res.status(201).json(job);
+      res.status(201).json({ ...job, alreadySaved: false });
     } catch (err) {
       res.status(502).json({ error: err.message });
     }

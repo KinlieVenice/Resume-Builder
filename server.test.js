@@ -296,12 +296,54 @@ test('POST /api/jobs extracts fields via jobExtractFn and saves with server-set 
     assert.equal(job.company, 'Acme');
     assert.equal(job.status, 'Submitted');
     assert.equal(job.link, 'https://example.com/job/1');
+    assert.equal(job.alreadySaved, false);
     assert.match(job.dateApplied, /^\d{4}-\d{2}-\d{2}$/);
 
     const listRes = await fetch(`${base}/api/jobs?personId=ada-lovelace`);
     const jobs = await listRes.json();
     assert.equal(jobs.length, 1);
     assert.equal(jobs[0].id, job.id);
+  } finally {
+    server.close();
+  }
+});
+
+test('POST /api/jobs with a link already saved for that person returns alreadySaved without calling jobExtractFn again', async () => {
+  let extractCalls = 0;
+  const fakeJobExtractFn = async () => {
+    extractCalls += 1;
+    return '{"jobTitle": "Backend Engineer", "company": "Acme", "briefDesc": "Build APIs", "salary": ""}';
+  };
+  const { app } = makeApp({ jobExtractFn: fakeJobExtractFn });
+  const { server, base } = await listen(app);
+  try {
+    const body = JSON.stringify({
+      personId: 'ada-lovelace',
+      jobDescription: 'We need a Backend Engineer at Acme.',
+      link: 'https://example.com/job/1',
+    });
+    const firstRes = await fetch(`${base}/api/jobs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    });
+    const firstJob = await firstRes.json();
+    assert.equal(firstRes.status, 201);
+    assert.equal(extractCalls, 1);
+
+    const secondRes = await fetch(`${base}/api/jobs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    });
+    assert.equal(secondRes.status, 200);
+    const secondJob = await secondRes.json();
+    assert.equal(secondJob.id, firstJob.id);
+    assert.equal(secondJob.alreadySaved, true);
+    assert.equal(extractCalls, 1, 'jobExtractFn should not be called again for a duplicate link');
+
+    const listRes = await fetch(`${base}/api/jobs?personId=ada-lovelace`);
+    assert.equal((await listRes.json()).length, 1);
   } finally {
     server.close();
   }
