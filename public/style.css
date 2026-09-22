@@ -121,6 +121,12 @@ button.danger {
   margin-top: 1.5rem;
 }
 
+.resume-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
 .resume-column,
 .match-column {
   flex: 1;

@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Resume Tailor</title>
+  <title>Tailor</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
   <header>
-    <h1>Resume Tailor</h1>
+    <h1>Tailor</h1>
     <nav>
       <button id="tab-people" class="tab-btn active">People</button>
       <button id="tab-tailor" class="tab-btn">Tailor</button>
@@ -47,6 +47,8 @@
       <select id="person-select"></select>
       <label for="job-description">Job description</label>
       <textarea id="job-description" rows="10" placeholder="Paste the job description here"></textarea>
+      <label for="job-link">Link</label>
+      <input type="text" id="job-link" placeholder="https://..." />
       <button id="tailor-btn">Tailor</button>
       <p id="tailor-error" class="error"></p>
     </div>
@@ -55,9 +57,13 @@
       <div class="resume-column">
         <h2>Resume (editable)</h2>
         <textarea id="resume-markdown" rows="30" spellcheck="false"></textarea>
-        <button id="print-btn">Preview &amp; Print PDF</button>
-        <button id="export-docx-btn">Export Word</button>
+        <div class="resume-actions">
+          <button id="export-docx-btn">Save as Word</button>
+          <button id="print-btn">Export as PDF</button>
+          <button id="save-job-btn">Save job</button>
+        </div>
         <p id="export-error" class="error"></p>
+        <p id="save-job-error" class="error"></p>
       </div>
       <div class="match-column">
         <h2>Compatibility</h2>
@@ -71,15 +77,6 @@
     <div class="jobs-controls">
       <label for="jobs-person-select">Person</label>
       <select id="jobs-person-select"></select>
-    </div>
-
-    <div class="jobs-save-box">
-      <label for="job-description-input">Job posting text</label>
-      <textarea id="job-description-input" rows="8" placeholder="Paste the full job posting here"></textarea>
-      <label for="job-link-input">Link</label>
-      <input type="text" id="job-link-input" placeholder="https://..." />
-      <button id="save-job-btn">Save this job</button>
-      <p id="job-save-error" class="error"></p>
     </div>
 
     <table id="jobs-table">

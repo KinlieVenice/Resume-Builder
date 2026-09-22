@@ -228,7 +228,38 @@ el('export-docx-btn').addEventListener('click', async () => {
     el('export-error').textContent = err.message;
   } finally {
     el('export-docx-btn').disabled = false;
-    el('export-docx-btn').textContent = 'Export Word';
+    el('export-docx-btn').textContent = 'Save as Word';
+  }
+});
+
+el('save-job-btn').addEventListener('click', async () => {
+  const personId = el('person-select').value;
+  const jobDescription = el('job-description').value.trim();
+  const link = el('job-link').value.trim();
+  el('save-job-error').textContent = '';
+
+  if (!personId || !jobDescription) {
+    el('save-job-error').textContent = 'Pick a person and paste a job description first.';
+    return;
+  }
+
+  el('save-job-btn').disabled = true;
+  el('save-job-btn').textContent = 'Saving…';
+  try {
+    const res = await fetch('/api/jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ personId, jobDescription, link }),
+    });
+    const body = await res.json();
+    if (!res.ok) {
+      throw new Error(body.error || 'Saving the job failed');
+    }
+  } catch (err) {
+    el('save-job-error').textContent = err.message;
+  } finally {
+    el('save-job-btn').disabled = false;
+    el('save-job-btn').textContent = 'Save job';
   }
 });
 
@@ -310,39 +341,5 @@ async function updateJobField(id, field, value) {
 }
 
 el('jobs-person-select').addEventListener('change', loadJobsForSelectedPerson);
-
-el('save-job-btn').addEventListener('click', async () => {
-  const personId = el('jobs-person-select').value;
-  const jobDescription = el('job-description-input').value.trim();
-  const link = el('job-link-input').value.trim();
-  el('job-save-error').textContent = '';
-
-  if (!personId || !jobDescription) {
-    el('job-save-error').textContent = 'Pick a person and paste a job posting first.';
-    return;
-  }
-
-  el('save-job-btn').disabled = true;
-  el('save-job-btn').textContent = 'Saving…';
-  try {
-    const res = await fetch('/api/jobs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ personId, jobDescription, link }),
-    });
-    const body = await res.json();
-    if (!res.ok) {
-      throw new Error(body.error || 'Saving the job failed');
-    }
-    el('job-description-input').value = '';
-    el('job-link-input').value = '';
-    await loadJobsForSelectedPerson();
-  } catch (err) {
-    el('job-save-error').textContent = err.message;
-  } finally {
-    el('save-job-btn').disabled = false;
-    el('save-job-btn').textContent = 'Save this job';
-  }
-});
 
 loadPeople();
