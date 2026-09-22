@@ -382,6 +382,9 @@ function renderJobRowEdit(tr, job) {
   const saveBtn = document.createElement('button');
   saveBtn.textContent = 'Save';
   saveBtn.addEventListener('click', async () => {
+    if (!confirm('Save changes to this job?')) {
+      return;
+    }
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving…';
     const res = await fetch(`/api/jobs/${job.id}`, {
@@ -397,7 +400,12 @@ function renderJobRowEdit(tr, job) {
 
   const cancelBtn = document.createElement('button');
   cancelBtn.textContent = 'Cancel';
-  cancelBtn.addEventListener('click', () => renderJobRowView(tr, job));
+  cancelBtn.addEventListener('click', () => {
+    if (!confirm('Discard these changes?')) {
+      return;
+    }
+    renderJobRowView(tr, job);
+  });
   actionsTd.appendChild(cancelBtn);
 
   tr.appendChild(actionsTd);
