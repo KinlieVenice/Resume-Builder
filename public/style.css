@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
@@ -174,12 +174,21 @@ button.danger {
   box-sizing: border-box;
   border: none;
   font-size: 0.9rem;
-  background: transparent;
+  background: #fff;
+  color: #111;
 }
 
 #jobs-table input:focus,
 #jobs-table select:focus {
   background: #fffbe0;
+}
+
+#jobs-table td:nth-child(3) {
+  min-width: 260px;
+}
+
+#jobs-table td a {
+  word-break: break-all;
 }
 
 @media print {

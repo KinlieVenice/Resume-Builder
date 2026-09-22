@@ -237,6 +237,7 @@ el('save-job-btn').addEventListener('click', async () => {
   const jobDescription = el('job-description').value.trim();
   const link = el('job-link').value.trim();
   el('save-job-error').textContent = '';
+  el('save-job-status').textContent = '';
 
   if (!personId || !jobDescription) {
     el('save-job-error').textContent = 'Pick a person and paste a job description first.';
@@ -255,6 +256,9 @@ el('save-job-btn').addEventListener('click', async () => {
     if (!res.ok) {
       throw new Error(body.error || 'Saving the job failed');
     }
+    el('save-job-status').textContent = body.alreadySaved
+      ? `Already saved — ${body.jobTitle || 'this job'} (${body.status})`
+      : `✅ Saved — ${body.jobTitle || 'job'}${body.company ? ' at ' + body.company : ''}`;
   } catch (err) {
     el('save-job-error').textContent = err.message;
   } finally {
@@ -286,22 +290,78 @@ function renderJobsTable(jobs) {
 
 function buildJobRow(job) {
   const tr = document.createElement('tr');
+  renderJobRowView(tr, job);
+  return tr;
+}
 
-  const textCell = (field, value) => {
+function viewCell(value) {
+  const td = document.createElement('td');
+  td.textContent = value || '';
+  td.title = value || '';
+  return td;
+}
+
+function renderJobRowView(tr, job) {
+  tr.innerHTML = '';
+
+  tr.appendChild(viewCell(job.dateApplied));
+  tr.appendChild(viewCell(job.jobTitle));
+  tr.appendChild(viewCell(job.briefDesc));
+  tr.appendChild(viewCell(job.company));
+  tr.appendChild(viewCell(job.salary));
+  tr.appendChild(viewCell(job.status));
+
+  const linkTd = document.createElement('td');
+  if (job.link) {
+    const a = document.createElement('a');
+    a.href = job.link;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.textContent = job.link;
+    a.title = job.link;
+    linkTd.appendChild(a);
+  }
+  tr.appendChild(linkTd);
+
+  const actionsTd = document.createElement('td');
+  const editBtn = document.createElement('button');
+  editBtn.textContent = 'Edit';
+  editBtn.addEventListener('click', () => renderJobRowEdit(tr, job));
+  actionsTd.appendChild(editBtn);
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.textContent = '×';
+  deleteBtn.className = 'danger';
+  deleteBtn.addEventListener('click', async () => {
+    if (!confirm(`Delete this job${job.jobTitle ? ` (${job.jobTitle})` : ''}? This can't be undone.`)) {
+      return;
+    }
+    await fetch(`/api/jobs/${job.id}`, { method: 'DELETE' });
+    tr.remove();
+  });
+  actionsTd.appendChild(deleteBtn);
+  tr.appendChild(actionsTd);
+}
+
+function renderJobRowEdit(tr, job) {
+  tr.innerHTML = '';
+  const draft = { ...job };
+
+  const textCell = (field) => {
     const td = document.createElement('td');
     const input = document.createElement('input');
     input.type = 'text';
-    input.value = value || '';
-    input.addEventListener('change', () => updateJobField(job.id, field, input.value));
+    input.value = draft[field] || '';
+    input.addEventListener('input', () => { draft[field] = input.value; });
     td.appendChild(input);
     return td;
   };
 
-  tr.appendChild(textCell('dateApplied', job.dateApplied));
-  tr.appendChild(textCell('jobTitle', job.jobTitle));
-  tr.appendChild(textCell('briefDesc', job.briefDesc));
-  tr.appendChild(textCell('company', job.company));
-  tr.appendChild(textCell('salary', job.salary));
+  tr.appendChild(textCell('dateApplied'));
+  tr.appendChild(textCell('jobTitle'));
+  tr.appendChild(textCell('briefDesc'));
+  tr.appendChild(textCell('company'));
+  tr.appendChild(textCell('salary'));
 
   const statusTd = document.createElement('td');
   const statusSelect = document.createElement('select');
@@ -309,35 +369,38 @@ function buildJobRow(job) {
     const optionEl = document.createElement('option');
     optionEl.value = opt;
     optionEl.textContent = opt;
-    if (opt === job.status) optionEl.selected = true;
+    if (opt === draft.status) optionEl.selected = true;
     statusSelect.appendChild(optionEl);
   }
-  statusSelect.addEventListener('change', () => updateJobField(job.id, 'status', statusSelect.value));
+  statusSelect.addEventListener('change', () => { draft.status = statusSelect.value; });
   statusTd.appendChild(statusSelect);
   tr.appendChild(statusTd);
 
-  tr.appendChild(textCell('link', job.link));
+  tr.appendChild(textCell('link'));
 
-  const deleteTd = document.createElement('td');
-  const deleteBtn = document.createElement('button');
-  deleteBtn.textContent = '×';
-  deleteBtn.className = 'danger';
-  deleteBtn.addEventListener('click', async () => {
-    await fetch(`/api/jobs/${job.id}`, { method: 'DELETE' });
-    tr.remove();
+  const actionsTd = document.createElement('td');
+  const saveBtn = document.createElement('button');
+  saveBtn.textContent = 'Save';
+  saveBtn.addEventListener('click', async () => {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+    const res = await fetch(`/api/jobs/${job.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(draft),
+    });
+    const updated = await res.json();
+    Object.assign(job, updated);
+    renderJobRowView(tr, job);
   });
-  deleteTd.appendChild(deleteBtn);
-  tr.appendChild(deleteTd);
+  actionsTd.appendChild(saveBtn);
 
-  return tr;
-}
+  const cancelBtn = document.createElement('button');
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.addEventListener('click', () => renderJobRowView(tr, job));
+  actionsTd.appendChild(cancelBtn);
 
-async function updateJobField(id, field, value) {
-  await fetch(`/api/jobs/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ [field]: value }),
-  });
+  tr.appendChild(actionsTd);
 }
 
 el('jobs-person-select').addEventListener('change', loadJobsForSelectedPerson);
