@@ -1,11 +1,39 @@
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --bg: #ffffff;
+  --text: #1a1a1a;
+  --border: #cccccc;
+  --panel-bg: #ffffff;
+  --panel-text: #111111;
+  --accent: #e0e8ff;
+  --accent-text: #1a1a1a;
+  --muted: #555555;
+  --focus-bg: #fffbe0;
+  --link: #1a56db;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a1a;
+    --text: #e8e8e8;
+    --border: #444444;
+    --panel-bg: #2a2a2a;
+    --panel-text: #e8e8e8;
+    --accent: #2d3a5c;
+    --accent-text: #ffffff;
+    --muted: #a0a0a0;
+    --focus-bg: #3a3418;
+    --link: #7fa5f5;
+  }
 }
 
 body {
   margin: 0;
   padding: 0 1.5rem 2rem;
+  background: var(--bg);
+  color: var(--text);
 }
 
 header {
@@ -13,7 +41,7 @@ header {
   align-items: center;
   justify-content: space-between;
   padding: 1rem 0;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--border);
 }
 
 .tab-btn {
@@ -24,7 +52,7 @@ header {
 
 .tab-btn.active {
   font-weight: bold;
-  border-bottom: 2px solid #333;
+  border-bottom: 2px solid var(--text);
 }
 
 .hidden {
@@ -53,7 +81,8 @@ header {
 }
 
 .people-list li.selected {
-  background: #e0e8ff;
+  background: var(--accent);
+  color: var(--accent-text);
 }
 
 .cv-editor {
@@ -64,6 +93,15 @@ textarea {
   width: 100%;
   font-family: ui-monospace, "SF Mono", Consolas, monospace;
   box-sizing: border-box;
+  background: var(--panel-bg);
+  color: var(--panel-text);
+}
+
+textarea,
+input[type="text"] {
+  background: var(--panel-bg);
+  color: var(--panel-text);
+  border: 1px solid var(--border);
 }
 
 .cv-editor-actions {
@@ -76,7 +114,7 @@ textarea {
   display: inline-block;
   margin-top: 0.5rem;
   padding: 0.4rem 0.8rem;
-  border: 1px solid #999;
+  border: 1px solid var(--border);
   border-radius: 4px;
   cursor: pointer;
   text-align: center;
@@ -103,7 +141,7 @@ button.danger {
 }
 
 .status {
-  color: #555;
+  color: var(--muted);
   font-style: italic;
 }
 
@@ -163,7 +201,7 @@ button.danger {
 
 #jobs-table th,
 #jobs-table td {
-  border: 1px solid #ccc;
+  border: 1px solid var(--border);
   padding: 0.3rem;
   text-align: left;
 }
@@ -174,21 +212,23 @@ button.danger {
   box-sizing: border-box;
   border: none;
   font-size: 0.9rem;
-  background: #fff;
-  color: #111;
+  background: var(--panel-bg);
+  color: var(--panel-text);
 }
 
 #jobs-table input:focus,
 #jobs-table select:focus {
-  background: #fffbe0;
+  background: var(--focus-bg);
 }
 
 #jobs-table td:nth-child(3) {
-  min-width: 260px;
+  min-width: 180px;
+  max-width: 260px;
 }
 
 #jobs-table td a {
   word-break: break-all;
+  color: var(--link);
 }
 
 @media print {
