@@ -8,66 +8,75 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-  <header>
-    <h1>Tailor</h1>
-    <nav>
-      <button id="tab-people" class="tab-btn active">People</button>
-      <button id="tab-tailor" class="tab-btn">Tailor</button>
-      <button id="tab-jobs" class="tab-btn">Jobs</button>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Tailor home"><span class="brand-mark">t.</span> tailor<span class="brand-dot">®</span></a>
+    <p class="nav-label">YOUR WORKSPACE</p>
+    <nav aria-label="Workspace">
+      <button id="tab-people" class="tab-btn active" aria-controls="people-panel" aria-pressed="true"><span aria-hidden="true">01</span> People <span class="nav-arrow" aria-hidden="true">↗</span></button>
+      <button id="tab-tailor" class="tab-btn" aria-controls="tailor-panel" aria-pressed="false"><span aria-hidden="true">02</span> Resume studio <span class="nav-arrow" aria-hidden="true">↗</span></button>
+      <button id="tab-jobs" class="tab-btn" aria-controls="jobs-panel" aria-pressed="false"><span aria-hidden="true">03</span> Job tracker <span class="nav-arrow" aria-hidden="true">↗</span></button>
     </nav>
-  </header>
-
+    <div class="sidebar-note"><span class="asterisk" aria-hidden="true">✳</span><p>Your next chapter<br>starts here.</p><small>A little intention.<br>A better application.</small></div>
+    <div class="sidebar-footer">TAILOR / CAREER WORKSPACE</div>
+  </aside>
+  <div class="workspace">
+  <header class="topbar"><span>MAKE YOUR EXPERIENCE COUNT</span><span class="workspace-tag"><i></i> Personal workspace</span></header>
   <main id="people-panel" class="panel">
+    <div class="page-heading"><h1>People</h1></div>
+    <div class="section-line"><span>YOUR PEOPLE</span><span>Build once. Tailor for every opportunity.</span></div>
     <div class="people-layout">
       <div class="people-list">
-        <h2>Saved people</h2>
-        <ul id="people-list"></ul>
+        <p class="eyebrow">PROFILE LIBRARY</p><h2>Who’s up next?</h2>
+        <ul id="people-list" aria-label="Saved profiles"></ul>
         <button id="new-person-btn">+ Add person</button>
-        <label for="upload-pdf-input" id="upload-label" class="upload-label">Upload PDF</label>
-        <input type="file" id="upload-pdf-input" accept="application/pdf" class="hidden" />
-        <p id="upload-status" class="status hidden">Extracting…</p>
-        <p id="upload-error" class="error"></p>
+        <label for="upload-pdf-input" id="upload-label" class="upload-label"><span aria-hidden="true">↑</span> Import a resume <small>Choose a PDF to get started</small></label>
+        <input type="file" id="upload-pdf-input" accept="application/pdf" class="file-input" />
+        <div id="upload-status" class="upload-progress hidden" role="status" aria-live="polite"><span class="upload-spinner" aria-hidden="true"></span><div><strong>Extracting your resume…</strong><small>Please wait. Your profile will appear in the editor when ready.</small></div></div>
+        <p id="upload-error" class="error" role="alert"></p>
       </div>
       <div class="cv-editor">
-        <h2 id="cv-editor-title">New person</h2>
-        <p class="hint">Master CV as JSON: name, contact, summary, skills[], experience[], projects[], education[].</p>
-        <textarea id="cv-json" rows="20" spellcheck="false"></textarea>
+        <div class="card-heading"><div><p class="eyebrow">MASTER PROFILE</p><h2 id="cv-editor-title">New person</h2></div><span class="format-tag">JSON</span></div>
+        <p class="hint" id="cv-hint">Your complete story, ready to tailor. Edit your name, contact, summary, skills, experience, projects, and education below.</p><label for="cv-json" class="editor-label">Profile source</label>
+        <textarea id="cv-json" aria-describedby="cv-hint" placeholder='Add a person or import a resume to begin…' rows="18" spellcheck="false"></textarea>
         <div class="cv-editor-actions">
-          <button id="save-cv-btn">Save</button>
+          <button id="save-cv-btn" class="primary">Save profile <span aria-hidden="true">↗</span></button>
           <button id="delete-cv-btn" class="danger">Delete</button>
         </div>
-        <p id="cv-error" class="error"></p>
+        <p id="cv-error" class="error" role="alert"></p>
       </div>
     </div>
   </main>
 
   <main id="tailor-panel" class="panel hidden">
+    <div class="page-heading"><h1>Resume studio</h1></div>
+    <div class="section-line"><span>RESUME STUDIO</span><span>A considered application starts here.</span></div>
+    <div class="studio-intro"><span aria-hidden="true">✳</span><p><strong>One profile. New possibilities.</strong><br>Choose a person, add the role, and tailor. Review your resume and compatibility before exporting.</p></div>
     <div class="tailor-controls">
-      <label for="person-select">Person</label>
+      <label for="person-select">01 — Choose your profile</label>
       <select id="person-select"></select>
-      <label for="job-description">Job description</label>
+      <label for="job-description">02 — Tell us about the opportunity</label>
       <textarea id="job-description" rows="10" placeholder="Paste the job description here"></textarea>
-      <label for="job-link">Link</label>
+      <label for="job-link">03 — Job link <span class="optional">(optional)</span></label>
       <input type="text" id="job-link" placeholder="https://..." />
-      <button id="tailor-btn">Tailor</button>
-      <p id="tailor-error" class="error"></p>
+      <button id="tailor-btn" class="primary">Tailor my resume ↗</button>
+      <p id="tailor-error" class="error" role="alert"></p>
     </div>
 
     <div class="tailor-results hidden" id="tailor-results">
       <div class="resume-column">
-        <h2>Resume (editable)</h2>
+        <p class="eyebrow">YOUR NEXT DRAFT</p><h2><label for="resume-markdown">Make it yours.</label></h2><p class="hint">Review and edit your resume before exporting.</p>
         <textarea id="resume-markdown" rows="30" spellcheck="false"></textarea>
         <div class="resume-actions">
           <button id="export-docx-btn">Save as Word</button>
           <button id="print-btn">Export as PDF</button>
           <button id="save-job-btn">Save job</button>
         </div>
-        <p id="export-error" class="error"></p>
-        <p id="save-job-status" class="status"></p>
-        <p id="save-job-error" class="error"></p>
+        <p id="export-error" class="error" role="alert"></p>
+        <p id="save-job-status" class="status" role="status"></p>
+        <p id="save-job-error" class="error" role="alert"></p>
       </div>
       <div class="match-column">
-        <h2>Compatibility</h2>
+        <p class="eyebrow">THE FIT</p><h2>Compatibility</h2>
         <p id="match-percent" class="match-percent"></p>
         <div id="match-report" class="match-report"></div>
       </div>
@@ -75,12 +84,14 @@
   </main>
 
   <main id="jobs-panel" class="panel hidden">
+    <div class="page-heading"><h1>Job tracker</h1></div>
+    <div class="section-line"><span>YOUR OPPORTUNITIES</span><span>Keep the next chapter in sight.</span></div>
     <div class="jobs-controls">
       <label for="jobs-person-select">Person</label>
       <select id="jobs-person-select"></select>
     </div>
 
-    <table id="jobs-table">
+    <div class="table-scroll" role="region" aria-label="Job applications" tabindex="0"><table id="jobs-table">
       <thead>
         <tr>
           <th>Date Applied</th>
@@ -90,15 +101,23 @@
           <th>Salary</th>
           <th>Status</th>
           <th>Link</th>
-          <th></th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody id="jobs-table-body"></tbody>
-    </table>
+    </table></div><p class="hint jobs-note">Save opportunities from Resume studio. Select Edit on an application to update its progress.</p>
   </main>
 
+  </div>
   <div id="print-view" class="hidden"></div>
 
+  <p id="operation-error" role="alert"></p>
+  <dialog id="loading-dialog" aria-labelledby="loading-message" aria-describedby="loading-detail" tabindex="-1">
+    <span class="upload-spinner" aria-hidden="true"></span>
+    <h2 id="loading-message" role="status" aria-live="polite">Working…</h2>
+    <p id="loading-detail">Please wait while we finish. This may take a moment.</p>
+  </dialog>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
