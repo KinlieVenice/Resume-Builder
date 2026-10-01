@@ -131,6 +131,7 @@ a { color: #934122; }
   }
 
   #print-view h1 {
+    font-family: Arial, Helvetica, sans-serif;
     font-size: 14pt;
     text-align: center;
     margin: 0 0 2pt;
@@ -145,6 +146,7 @@ a { color: #934122; }
   }
 
   #print-view h2 {
+    font-family: Arial, Helvetica, sans-serif;
     font-size: 10pt;
     text-transform: uppercase;
     letter-spacing: 0.02em;
