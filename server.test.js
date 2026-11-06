@@ -11,7 +11,7 @@ function tmpDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'resume-tailor-test-'));
 }
 
-function makeApp({ tailorFn, baseUrl, extractFn, pdfParseImpl, jobExtractFn } = {}) {
+function makeApp({ tailorFn, baseUrl, extractFn, pdfParseImpl, jobExtractFn, password } = {}) {
   const db = openDb(':memory:');
   const skillPath = path.join(tmpDir(), 'SKILL.md');
   fs.writeFileSync(skillPath, 'TEST SKILL RULES');
@@ -31,9 +31,24 @@ function makeApp({ tailorFn, baseUrl, extractFn, pdfParseImpl, jobExtractFn } = 
     extractFn,
     pdfParseImpl,
     jobExtractFn,
+    password,
   });
   return { app, db };
 }
+
+test('password protects the page and API', async () => {
+  const { app } = makeApp({ password: 'a-long-test-password' });
+  const { server, base } = await listen(app);
+  try {
+    assert.equal((await fetch(base)).status, 401);
+    assert.equal((await fetch(`${base}/api/people`)).status, 401);
+    const auth = `Basic ${Buffer.from('resume:a-long-test-password').toString('base64')}`;
+    assert.equal((await fetch(`${base}/api/people`, { headers: { Authorization: auth } })).status, 200);
+    assert.equal((await fetch(`${base}/api/people`, { method: 'POST', headers: { Authorization: auth, Origin: 'https://evil.example', 'Content-Type': 'application/json' }, body: '{"name":"test"}' })).status, 403);
+  } finally {
+    server.close();
+  }
+});
 
 async function listen(app) {
   const server = app.listen(0);

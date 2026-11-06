@@ -1,6 +1,7 @@
 'use strict';
 const path = require('node:path');
 const fs = require('node:fs');
+const crypto = require('node:crypto');
 const express = require('express');
 const multer = require('multer');
 const { slugify, listPeople, readCV, writeCV, deleteCV } = require('./lib/cvStore');
@@ -29,8 +30,29 @@ function createApp({
   extractFn = tailorWithOpenRouter,
   jobExtractFn = tailorWithOpenRouter,
   pdfParseImpl,
+  password,
 }) {
   const app = express();
+  if (password) {
+    const expected = crypto.createHash('sha256').update(`resume:${password}`).digest();
+    app.use((req, res, next) => {
+      const header = req.get('Authorization') || '';
+      const supplied = header.startsWith('Basic ') ? Buffer.from(header.slice(6), 'base64') : Buffer.alloc(0);
+      const actual = crypto.createHash('sha256').update(supplied).digest();
+      if (!crypto.timingSafeEqual(expected, actual)) {
+        res.set('WWW-Authenticate', 'Basic realm="Resume Tailor", charset="UTF-8"');
+        return res.status(401).send('Authentication required');
+      }
+      if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && req.get('Origin')) {
+        try {
+          if (new URL(req.get('Origin')).host !== req.get('Host')) return res.sendStatus(403);
+        } catch {
+          return res.sendStatus(403);
+        }
+      }
+      next();
+    });
+  }
   app.use(express.json());
   app.use(express.static(path.join(__dirname, 'public')));
 
@@ -214,6 +236,11 @@ if (require.main === module) {
     console.error('Missing OPENROUTER_API_KEY in .env — see .env.example');
     process.exit(1);
   }
+  const password = process.env.APP_PASSWORD;
+  if (!password || password.length < 24) {
+    console.error('Set APP_PASSWORD to a random password of at least 24 characters in .env');
+    process.exit(1);
+  }
   const dataDir = path.join(__dirname, 'data');
   fs.mkdirSync(dataDir, { recursive: true });
   const db = openDb(path.join(dataDir, 'resume-tailor.db'));
@@ -225,7 +252,8 @@ if (require.main === module) {
     apiKey,
     model: process.env.OPENROUTER_MODEL || 'anthropic/claude-sonnet-5',
     baseUrl: process.env.OPENROUTER_BASE_URL,
+    password,
   });
   const port = process.env.PORT || 3000;
-  app.listen(port, () => console.log(`Resume Tailor running at http://localhost:${port}`));
+  app.listen(port, '127.0.0.1', () => console.log(`Resume Tailor running at http://localhost:${port}`));
 }

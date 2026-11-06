@@ -10,8 +10,11 @@ Data (people, master CVs, job applications) is stored in `data/resume-tailor.db`
 2. `cp .env.example .env` and fill in `OPENROUTER_API_KEY` — either:
    - an OpenRouter key from https://openrouter.ai/keys, or
    - a key from a local gateway like [9router](https://github.com/decolua/9router), which connects to Claude, GPT, OpenCode, etc. Set `OPENROUTER_BASE_URL` in `.env` to that gateway's local URL (e.g. `http://localhost:20128/v1`) and `OPENROUTER_MODEL` to whatever model slug it exposes.
-3. `npm start`
-4. Open http://localhost:3000
+3. Set `APP_PASSWORD` in `.env` to the output of `openssl rand -hex 32`.
+4. `npm start`
+5. Open http://localhost:3000 and sign in with username `resume` and your `APP_PASSWORD`.
+
+The server listens only on localhost. For remote access, use an HTTPS reverse proxy that forwards to `127.0.0.1:3000`, and forward only HTTPS traffic from your router to that proxy. Never forward port 3000 directly: HTTP Basic authentication requires HTTPS to protect the password. Keep 9router private. A public hostname, a valid TLS certificate, a reachable public IP, and router access are needed to configure this.
 
 ## Usage
 
